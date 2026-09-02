@@ -1,0 +1,108 @@
+ÉTAT DU DÉVELOPPEMENT — ZELDISH
+====================================
+Dernière mise à jour : 2026-09-02
+
+⚠ À METTRE À JOUR À CHAQUE FIN DE SESSION DE DÉVELOPPEMENT
+------------------------------------------------------------
+Avant de terminer une session (pause, fin de journée, etc.), Claude doit
+mettre à jour ce fichier avec les changements faits durant la session : ce
+qui a été complété, les nouvelles décisions techniques prises, les pièges
+rencontrés, et ce qui reste comme prochaine étape. Le but est que ce fichier
+reste toujours un reflet fidèle et à jour de l'état réel du projet.
+
+À LIRE EN PREMIER
+------------------
+Ce fichier complète (ne remplace pas) "Structure Projet Claude-Godot.txt" dans
+ce même dossier — ce dernier contient le concept, l'architecture visée et le
+plan MVP complet. Ce fichier-ci ne contient QUE l'état d'avancement réel et
+les décisions prises pendant l'implémentation qui ne sont pas dans le doc
+original.
+
+RAPPEL DU RÔLE DE CLAUDE (important, à respecter dans toute session)
+----------------------------------------------------------------------
+- Coach/prof, PAS un codeur : n'écrit pas le code à ma place, ne fait pas le
+  scaffolding (dossiers, scènes, noeuds) à ma place.
+- Enseigne par questions guidées (méthode socratique) plutôt que de donner du
+  code prêt à copier-coller.
+- J'apprends à coder — l'objectif du projet est autant l'apprentissage que le
+  jeu lui-même.
+- Explique les concepts Godot/GDScript que je ne connais pas (ça fait
+  longtemps que je n'ai pas utilisé Godot).
+- Les actions en lecture seule (inspection scène, console, screenshots via
+  godot-mcp) sont correctes pour déboguer — la limite concerne seulement la
+  construction/écriture.
+
+
+PHASE 1 — MOUVEMENT + ATTAQUE
+================================
+
+[FAIT] Mouvement top-down + FSM Idle/Walk — testé et fonctionnel en éditeur
+
+Détails techniques de ce qui est en place :
+
+1. Player.tscn
+   - Racine : CharacterBody2D (renommé "Player")
+   - Enfants : AnimatedSprite2D, CollisionShape2D
+   - Enfant StateMachine (Node, script state_machine.gd)
+	 - Enfant Idle (Node, script idle_state.gd)
+	 - Enfant Walk (Node, script walk_state.gd)
+   - Les noms "Idle" et "Walk" doivent rester exacts (utilisés comme clés de
+	 dictionnaire dans state_machine.gd)
+
+2. Pattern State générique (réutilisable, pas juste pour Player)
+   - scripts/core/state.gd → class_name State
+	 Interface : enter(actor), exit(), physics_update(delta, actor),
+	 handle_input(event, actor) — toutes vides/virtuelles dans la base
+   - scripts/core/state_machine.gd → class_name StateMachine
+	 - @export var actor: CharacterBody2D (assigné dans l'Inspecteur avec le
+       noeud Player)
+     - states: Dictionary rempli dans _ready() à partir des enfants
+     - _physics_process délègue à current_state.physics_update()
+     - transition_to(state_name) : exit() → swap current_state → enter()
+   - Les états concrets accèdent à leur StateMachine parente via
+     (get_parent() as StateMachine) — jugé sécuritaire car les states sont
+	 garantis d'être des enfants directs d'une StateMachine par construction
+
+3. États concrets du Player
+   - scripts/entities/player/idle_state.gd
+   - scripts/entities/player/walk_state.gd
+   - Emplacement choisi : scripts/entities/ pour les states concrets liés à
+     une entité précise (par opposition à scripts/core/ qui est générique).
+     scenes/entities/ reste réservé aux ennemis/NPCs (pas le Player).
+
+4. Vitesse en data-driven (pattern Resource du doc original, pas hardcodé)
+   - scripts/core/movement_config.gd → class_name MovementConfig,
+     @export var speed: float = 200.0
+   - resources/data/player_movement_config.tres → instance de données
+   - WalkState a @export var config: MovementConfig, assigné dans
+	 l'Inspecteur avec le fichier .tres ci-dessus
+   - Convention établie : scripts de classe Resource → scripts/core/,
+	 fichiers .tres de données → resources/data/
+
+5. Input Map configuré : move_left, move_right, move_up, move_down
+   (Project Settings → Input Map)
+
+PIÈGE RENCONTRÉ (à retenir)
+- Renommer un fichier de script Resource APRÈS qu'un .tres y fasse déjà
+  référence casse la référence ("File not found" sur l'ancien chemin).
+  Solution qui a fonctionné : fermer et rouvrir l'éditeur Godot pour forcer
+  le rechargement du cache de classes.
+
+
+[À FAIRE] Reste de la Phase 1
+--------------------------------
+D'après le plan MVP original :
+- État Attack : input → hitbox temporaire → EventBus (signal enemy_hit)
+- Ennemi basique : CharacterBody2D statique + HealthComponent
+- Connecter hitbox → take_damage() via EventBus ou signal direct
+- Résultat visé : bouger + frapper + ennemi meurt
+
+Pas encore commencé : EventBus (autoload), Component Pattern
+(HealthComponent, HitboxComponent), et tout ce qui touche à Phase 2 (Lumière).
+
+
+PHASE 2 — LUMIÈRE
+===================
+[PAS COMMENCÉ] — voir le doc de design original pour les détails
+(LightSource, VisibilityComponent, raycasting, EventBus entity_entered_light
+/ entity_left_light)

@@ -1,0 +1,116 @@
+PROJET : Jeu d'action-aventure 2D top-down (style Zelda: A Link to the Past)
+============================================================================
+
+CONTEXTE
+--------
+- Projet personnel développé avec mon garçon
+- Pixel art 2D, vue du dessus
+- Moteur : Godot 4
+- Je code tout moi-même — Claude agit en coach (structure, concepts, debug),
+  ne génère pas de code à ma place
+
+RÔLE DE CLAUDE SUR CE PROJET
+-----------------------------
+- Aider à structurer l'architecture
+- Expliquer et enseigner les concepts de programmation
+- Proposer les meilleures approches (patterns, organisation)
+- Aider au débogage
+- Ne PAS coder à ma place — je veux tout écrire moi-même
+
+
+STRUCTURE DE DOSSIERS (Godot 4)
+---------------------------------
+res://
+├── scenes/
+│   ├── main/           -> Main.tscn (gestion scènes/état global)
+│   ├── player/          -> Player.tscn + script
+│   ├── world/            -> TileMap, rooms/zones
+│   ├── entities/          -> ennemis, NPCs (composition)
+│   └── ui/
+├── scripts/
+│   ├── autoload/          -> EventBus, GameState
+│   ├── core/               -> FSM générique, composants réutilisables
+│   └── entities/
+├── resources/
+│   └── data/                -> stats items/ennemis (.tres, resource-based)
+├── assets/
+│   ├── sprites/
+│   ├── tilesets/
+│   └── audio/
+
+
+DESIGN PATTERNS RETENUS
+-------------------------
+1. EventBus (Autoload)
+   - Signals globaux pour découpler les systèmes
+   - Ex: enemy_hit, entity_entered_light, entity_left_light
+
+2. State Machine (FSM)
+   - Pour Player (Idle/Walk/Attack/Hurt/Dash) et ennemis
+   - Générique et réutilisable
+
+3. Component Pattern
+   - Comportements attachables : HealthComponent, HitboxComponent,
+	 VisibilityComponent
+   - Réutilisable entre Player et ennemis, évite héritage profond
+
+4. Resource-based data (.tres)
+   - Stats d'items, armes, ennemis en Resources custom
+   - Data-driven plutôt que hardcodé
+
+À ÉVITER
+- Abus de singletons/autoloads (recouplage déguisé)
+- Héritage profond de scènes (Base -> Mid -> Final)
+
+
+MÉCANIQUE CENTRALE : LA LUMIÈRE
+----------------------------------
+Deux systèmes séparés et découplés :
+
+1. VISUEL (rendering/shading)
+   - Light2D natif Godot 4 pour éclairage dynamique
+   - LightOccluder2D sur murs/obstacles -> ombres portées
+   - Niveau sombre par défaut, sources de lumière révèlent zones
+
+2. GAMEPLAY (détection/raycasting)
+   - Logique séparée du rendu visuel
+   - RayCast2D / intersect_ray() depuis sources lumière vers entités
+   - Détermine si une entité est "visible" (dans zone + ligne de vue dégagée)
+
+Pourquoi séparer visuel et logique :
+   - Performance (raycasting gameplay indépendant de la précision du shader)
+   - Flexibilité (changer l'effet visuel sans toucher la détection)
+   - Testabilité (logique isolée du rendu)
+
+Architecture proposée :
+   scripts/core/
+   ├── light_source.gd       -> composant : position + rayon + angle
+   ├── visibility_checker.gd  -> raycasting, détermine qui voit quoi
+   └── lit_area_detector.gd    -> zones éclairées vs ombre (environnement)
+
+Connexion via EventBus :
+   - entity_entered_light
+   - entity_left_light
+
+
+PLAN MVP (scope micro)
+-------------------------
+Phase 1 — Mouvement + Attaque (mécanique centrale #1)
+   1. Player.tscn : CharacterBody2D + AnimatedSprite2D + CollisionShape2D
+   2. Mouvement top-down 4 directions (pas de gravité)
+   3. State Machine simple : Idle <-> Walk
+   4. State Attack : input -> hitbox temporaire -> EventBus (enemy_hit)
+   5. Ennemi basique : CharacterBody2D statique + HealthComponent
+   6. Connecter hitbox -> take_damage() via EventBus ou signal direct
+   7. Résultat jouable : bouger + frapper + ennemi meurt
+
+Phase 2 — Lumière (mécanique centrale #2)
+   8. LightSource composant (Node2D + Light2D)
+   9. VisibilityComponent + raycasting (détection)
+   10. EventBus : entity_entered_light / entity_left_light
+   11. Connecter à comportement ennemi (ex: alerté si dans la lumière)
+
+
+ORDRE DE PRIORITÉ CONFIRMÉ
+-----------------------------
+Attaque d'abord, puis lumière.

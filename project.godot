@@ -16,7 +16,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-McpRuntime="*res://addons/godot-mcp/mcp_runtime.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [dotnet]
 
@@ -24,7 +24,7 @@ project/assembly_name="Zeldish"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot-mcp/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/kanban_tasks/plugin.cfg")
 
 [input]
 

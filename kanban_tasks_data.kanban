@@ -1,0 +1,50 @@
+{
+	"categories": [
+		{
+			"uuid": "3d63511f-56d2-469e-adc9-44f16b293fee",
+			"title": "Task",
+			"color": "569eff"
+		}
+	],
+	"stages": [
+		{
+			"uuid": "025ea42f-26bf-42f9-8438-21eb63fd6c56",
+			"title": "Todo",
+			"tasks": [
+				"cdad4f06-b25d-45a6-a03b-e243680ba4f4"
+			]
+		},
+		{
+			"uuid": "e108728b-9a66-458b-8be8-b32d3dc3c7e7",
+			"title": "Doing",
+			"tasks": []
+		},
+		{
+			"uuid": "d4d7db77-fc48-4ced-9446-1024057d2419",
+			"title": "Done",
+			"tasks": []
+		}
+	],
+	"tasks": [
+		{
+			"uuid": "cdad4f06-b25d-45a6-a03b-e243680ba4f4",
+			"title": "Implémenter ennemis",
+			"description": "",
+			"category": "3d63511f-56d2-469e-adc9-44f16b293fee",
+			"steps": []
+		}
+	],
+	"layout": {
+		"columns": [
+			[
+				"025ea42f-26bf-42f9-8438-21eb63fd6c56"
+			],
+			[
+				"e108728b-9a66-458b-8be8-b32d3dc3c7e7"
+			],
+			[
+				"d4d7db77-fc48-4ced-9446-1024057d2419"
+			]
+		]
+	}
+}

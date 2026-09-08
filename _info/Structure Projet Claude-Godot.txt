@@ -15,28 +15,46 @@ RÔLE DE CLAUDE SUR CE PROJET
 - Expliquer et enseigner les concepts de programmation
 - Proposer les meilleures approches (patterns, organisation)
 - Aider au débogage
+- Réviser mon code par rapport au style guide officiel GDScript
+  (https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html)
+  en expliquant la règle, pas juste en corrigeant
 - Ne PAS coder à ma place — je veux tout écrire moi-même
 
 
 STRUCTURE DE DOSSIERS (Godot 4)
 ---------------------------------
+Organisation PAR FEATURE (changé le 2026-09-08 — remplace l'ancienne
+organisation par type de fichier).
+
 res://
+├── entities/
+│   ├── player/            -> Player.tscn + TOUT ce qui est propre au joueur :
+│   │                          states (idle_state.gd, walk_state.gd),
+│   │                          data (player_movement_config.tres), sprites
+│   └── <ennemi>/           -> même pattern pour chaque ennemi/NPC (ex: goblin/)
+├── core/                    -> infrastructure générique PARTAGÉE entre
+│                                features (FSM de base : state.gd,
+│                                state_machine.gd ; futurs composants
+│                                réutilisables type VisibilityComponent)
 ├── scenes/
-│   ├── main/           -> Main.tscn (gestion scènes/état global)
-│   ├── player/          -> Player.tscn + script
-│   ├── world/            -> TileMap, rooms/zones
-│   ├── entities/          -> ennemis, NPCs (composition)
+│   ├── main/                -> Main.tscn (gestion scènes/état global)
 │   └── ui/
-├── scripts/
-│   ├── autoload/          -> EventBus, GameState
-│   ├── core/               -> FSM générique, composants réutilisables
-│   └── entities/
-├── resources/
-│   └── data/                -> stats items/ennemis (.tres, resource-based)
-├── assets/
-│   ├── sprites/
-│   ├── tilesets/
-│   └── audio/
+├── world/                    -> TileMap, rooms/zones
+└── assets/                    -> assets partagés non liés à une seule entité
+                                  (fonts, UI commune, tilesets globaux)
+
+Pourquoi ce changement :
+   - Chaque feature (player, un ennemi) est autonome dans son propre dossier
+     (scène + scripts + données ensemble) au lieu d'être dispersée entre
+     scripts/, scenes/ et resources/.
+   - Seul le code VRAIMENT générique (réutilisé par plusieurs features) reste
+     dans core/ — ce n'est pas une "feature", donc ça n'a pas sa place sous
+     entities/.
+
+⚠ PIÈGE GODOT : déplacer/renommer des fichiers doit se faire depuis le dock
+FileSystem de l'éditeur (glisser-déposer ou clic droit > Move To...), jamais
+depuis l'explorateur Windows — sinon les références (scène -> script,
+script -> resource) cassent.
 
 
 DESIGN PATTERNS RETENUS
@@ -83,7 +101,7 @@ Pourquoi séparer visuel et logique :
    - Testabilité (logique isolée du rendu)
 
 Architecture proposée :
-   scripts/core/
+   core/
    ├── light_source.gd       -> composant : position + rayon + angle
    ├── visibility_checker.gd  -> raycasting, détermine qui voit quoi
    └── lit_area_detector.gd    -> zones éclairées vs ombre (environnement)

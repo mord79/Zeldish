@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://2258i1qmd6ag"]
+
+[ext_resource type="Texture2D" uid="uid://dwfrnpn6va3ci" path="res://entities/player/Temp.png" id="1_g3lhm"]
+[ext_resource type="Script" uid="uid://byev4jipv15s1" path="res://core/state_machine.gd" id="2_g3lhm"]
+[ext_resource type="Script" uid="uid://dc7sox0s37tdc" path="res://entities/player/idle_state.gd" id="3_g3lhm"]
+[ext_resource type="Script" uid="uid://byr2p20exnhi0" path="res://entities/player/walk_state.gd" id="4_4pwj0"]
+[ext_resource type="Resource" uid="uid://cky6a6u7qb32p" path="res://entities/player/player_movement_config.tres" id="5_g3lhm"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_o8nba"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_g3lhm")
+}],
+"loop": 1,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_xf7n7"]
+
+[node name="Player" type="CharacterBody2D" unique_id=1183636273]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1772238807]
+sprite_frames = SubResource("SpriteFrames_o8nba")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1326986168]
+shape = SubResource("CapsuleShape2D_xf7n7")
+
+[node name="StateMachine" type="Node" parent="." unique_id=2020889882 node_paths=PackedStringArray("actor")]
+script = ExtResource("2_g3lhm")
+actor = NodePath("..")
+metadata/_custom_type_script = "uid://byev4jipv15s1"
+
+[node name="Idle" type="Node" parent="StateMachine" unique_id=1343153357]
+script = ExtResource("3_g3lhm")
+metadata/_custom_type_script = "uid://jgy648vbcye7"
+
+[node name="Walk" type="Node" parent="StateMachine" unique_id=1071879178]
+script = ExtResource("4_4pwj0")
+config = ExtResource("5_g3lhm")
+metadata/_custom_type_script = "uid://jgy648vbcye7"

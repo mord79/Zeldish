@@ -1,6 +1,6 @@
 ÉTAT DU DÉVELOPPEMENT — ZELDISH
 ====================================
-Dernière mise à jour : 2026-09-02
+Dernière mise à jour : 2026-09-08
 
 ⚠ À METTRE À JOUR À CHAQUE FIN DE SESSION DE DÉVELOPPEMENT
 ------------------------------------------------------------
@@ -31,6 +31,27 @@ RAPPEL DU RÔLE DE CLAUDE (important, à respecter dans toute session)
 - Les actions en lecture seule (inspection scène, console, screenshots via
   godot-mcp) sont correctes pour déboguer — la limite concerne seulement la
   construction/écriture.
+- Révise aussi mon code par rapport au style guide officiel GDScript
+  (nommage, type hints, formatage, ordre du code dans le fichier) — voir
+  https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html
+
+
+RESTRUCTURATION DES DOSSIERS (2026-09-08)
+--------------------------------------------
+Passage d'une organisation PAR TYPE (scripts/, scenes/, resources/) à une
+organisation PAR FEATURE. Voir "Structure Projet Claude-Godot.txt" pour
+l'arborescence cible complète et les raisons du changement.
+
+Fait :
+- scripts/entities/player/*.gd, scenes/player/Player.tscn et
+  resources/data/player_movement_config.tres → fusionnés dans entities/player/
+- scripts/core/*.gd → renommé core/ (reste par type, car générique/partagé,
+  pas une feature — voir doc de structure)
+- Déplacement fait depuis le dock FileSystem de l'éditeur (pas l'explorateur
+  Windows) pour préserver les références — vérifié après coup, rien de cassé
+- Style guide : espace avant les ":" de type hint corrigé (ex.
+  "var speed : float" -> "var speed: float") dans core/state_machine.gd,
+  core/movement_config.gd, entities/player/walk_state.gd
 
 
 PHASE 1 — MOUVEMENT + ATTAQUE
@@ -50,10 +71,10 @@ Détails techniques de ce qui est en place :
 	 dictionnaire dans state_machine.gd)
 
 2. Pattern State générique (réutilisable, pas juste pour Player)
-   - scripts/core/state.gd → class_name State
+   - core/state.gd → class_name State
 	 Interface : enter(actor), exit(), physics_update(delta, actor),
 	 handle_input(event, actor) — toutes vides/virtuelles dans la base
-   - scripts/core/state_machine.gd → class_name StateMachine
+   - core/state_machine.gd → class_name StateMachine
 	 - @export var actor: CharacterBody2D (assigné dans l'Inspecteur avec le
        noeud Player)
      - states: Dictionary rempli dans _ready() à partir des enfants
@@ -64,20 +85,21 @@ Détails techniques de ce qui est en place :
 	 garantis d'être des enfants directs d'une StateMachine par construction
 
 3. États concrets du Player
-   - scripts/entities/player/idle_state.gd
-   - scripts/entities/player/walk_state.gd
-   - Emplacement choisi : scripts/entities/ pour les states concrets liés à
-     une entité précise (par opposition à scripts/core/ qui est générique).
-     scenes/entities/ reste réservé aux ennemis/NPCs (pas le Player).
+   - entities/player/idle_state.gd
+   - entities/player/walk_state.gd
+   - Emplacement (depuis la restructuration du 2026-09-08) :
+     entities/player/ pour tout ce qui est spécifique au Player (états,
+     scène, données) ; core/ réservé au générique/partagé entre features.
 
 4. Vitesse en data-driven (pattern Resource du doc original, pas hardcodé)
-   - scripts/core/movement_config.gd → class_name MovementConfig,
+   - core/movement_config.gd → class_name MovementConfig,
      @export var speed: float = 200.0
-   - resources/data/player_movement_config.tres → instance de données
+   - entities/player/player_movement_config.tres → instance de données
    - WalkState a @export var config: MovementConfig, assigné dans
 	 l'Inspecteur avec le fichier .tres ci-dessus
-   - Convention établie : scripts de classe Resource → scripts/core/,
-	 fichiers .tres de données → resources/data/
+   - Convention (depuis la restructuration) : scripts de classe Resource
+     génériques → core/, instances .tres de données propres à une feature →
+     dans le dossier de cette feature (ex. entities/player/)
 
 5. Input Map configuré : move_left, move_right, move_up, move_down
    (Project Settings → Input Map)
